@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSV to JSON Converter</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+</head>
+<body>
+
+<input type="file" id="csvFileInput" accept=".csv">
+<button onclick="convertCsvToJson()">Convert CSV to JSON</button>
+<button onclick="downloadJson()">Download JSON</button>
+<pre id="jsonOutput"></pre>
+
+<script>
+  let jsonArray = [];
+
+  function convertCsvToJson() {
+    const csvFileInput = document.getElementById('csvFileInput');
+    const jsonOutput = document.getElementById('jsonOutput');
+
+    const file = csvFileInput.files[0];
+
+    if (file) {
+      const reader = new FileReader();
+
+      reader.onload = async (event) => {
+        const csvData = event.target.result;
+
+        jsonArray = await new Promise((resolve) => {
+          Papa.parse(csvData, {
+            header: true,
+            complete: (result) => resolve(result.data),
+            error: (error) => console.error(error),
+          });
+        });
+
+        const jsonString = JSON.stringify(jsonArray, null, 2);
+        jsonOutput.textContent = jsonString;
+      };
+
+      reader.readAsText(file);
+    } else {
+      alert('Please choose a CSV file');
+    }
+  }
+
+  function downloadJson() {
+    if (jsonArray.length === 0) {
+      alert('Please convert CSV to JSON first');
+      return;
+    }
+
+    const jsonString = JSON.stringify(jsonArray, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'converted_data.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    URL.revokeObjectURL(url);
+  }
+</script>
+
+</body>
+</html>
